@@ -13,7 +13,8 @@
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
-    "codegen": "playwright codegen --ignore-https-errors",
+    "codegen": "playwright codegen --target=javascript --ignore-https-errors",
+    "codegen:ts": "playwright codegen --target=playwright-test --ignore-https-errors",
     "report": "playwright show-report",
     "show-trace": "playwright show-trace"
   },
