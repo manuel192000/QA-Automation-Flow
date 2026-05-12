@@ -1,0 +1,44 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# === Secrets ===
+.env
+.env.local
+.env.*.local
+
+# === Playwright artifacts ===
+videos/
+traces/
+playwright-report/
+test-results/
+
+# === QA reports (committing examples only) ===
+reports/
+!reports/.gitkeep
+!reports/example_*.md
+
+# === IDE & OS noise ===
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# === Claude Code ===
+.claude/cache/
+
+# === stray files ===
+=
+*.tmp
