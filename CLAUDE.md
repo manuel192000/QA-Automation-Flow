@@ -1,114 +1,133 @@
-# Proyecto: QA Automation — Enterprise 2026
+# Project: QA Automation Flow — oneshop
 
-Este archivo es leído automáticamente por Claude Code cada vez que se inicia
-en esta carpeta. Define el contexto, convenciones y comandos del proyecto.
-
----
-
-## Contexto del proyecto
-
-- **Rol:** QA manual automatizando su flujo de trabajo.
-- **Producto bajo prueba:** oneshop (web frontend).
-  - **Ambiente staging:** `https://oneshopqa.com.dev.nmg-platform.com/`
-- **Gestor de incidencias:** monday.com, board "Enterprise 2026".
-- **Estados de ticket QA:**
-  `QA ready` → `QA in progress` → `QA passed` / `QA failed`
-- **Decisión humana (NO automatizar):** el paso de `QA ready` → `QA in progress`
-  lo hace el QA manualmente al tomar el caso. El orquestador automatizado
-  solo procesa tickets ya en `QA in progress`.
+This file is automatically loaded by Claude Code whenever it is started
+in this folder. It defines context, conventions and commands.
 
 ---
 
-## Stack técnico
+## Project context
 
-- Python 3.11+
-- Playwright + pytest-playwright
-- pytest, pytest-html, python-dotenv, requests
-- Monday GraphQL API v2
+- **Role:** Manual QA accelerating their workflow with AI copilots and
+  Playwright Test (TypeScript).
+- **App under test:** oneshop (web frontend).
+  - **DEV environment:** `https://oneshopqa.com.dev.nmg-platform.com/`
+- **Ticket tracker:** monday.com, board "Enterprise 2026".
+- **Ticket states:** `QA Ready` → `QA In Progress` → `QA Passed` / `QA Failed`.
+- **Repo purpose:** local sandbox to author Playwright specs. Once a spec
+  is stable, it is copied into the official automation repository.
 
 ---
 
-## Convenciones del proyecto
+## Tech stack
 
-- **Tests:** en `tests/`, organizados por carpeta funcional (`smoke/`, `regression/`).
-- **Page Objects:** en `pages/`, una clase por página.
-- **Datos de prueba:** en `data/` (JSON/YAML).
-- **Utilidades:** en `utils/` (cliente Monday, generador de reportes, etc.).
-- **Reportes:** se generan en `reports/`.
-- **Videos y traces:** en `videos/` y `traces/` (gitignored).
+- Node.js 18+
+- Playwright Test (`@playwright/test`)
+- TypeScript
+- Chromium (downloaded by `npm run install:browsers`)
 
-### Estilo de código
-- Nombres de funciones y archivos en **inglés** (`test_login_with_valid_user`).
-- Docstrings y comentarios en **español**.
-- Cada test arranca con un docstring que incluye: ID Monday, descripción, precondiciones.
-- Usar locators de Playwright (`page.get_by_role`, `page.get_by_test_id`).
-  **Evitar XPath y selectores frágiles.**
-- Nunca usar `time.sleep`. Usar `expect()` con auto-wait de Playwright.
+---
 
-### Estilo de tests
-```python
-def test_login_with_valid_credentials(page):
-    """
-    Monday: 1234567890
-    Verifica que un usuario válido puede iniciar sesión.
-    Precondiciones: usuario existe en BD de staging.
-    """
-    page.goto("/login")
-    page.get_by_label("Email").fill("qa@oneshop.com")
-    page.get_by_label("Password").fill("Test123!")
-    page.get_by_role("button", name="Sign in").click()
-    expect(page.get_by_role("heading", name="Dashboard")).to_be_visible()
+## Project conventions
+
+- **Tests:** in `tests/`, split between `smoke/` and `regression/`. One
+  file per ticket / feature, named `<feature>.spec.ts`.
+- **Page Objects:** in `pages/`, one class per page or UI component.
+- **Test data:** in `data/` (JSON).
+- **Utilities:** in `utils/` (TypeScript helpers).
+- **Reports:** Playwright HTML report in `playwright-report/`. Custom
+  Markdown summaries (if needed) go in `reports/`.
+
+### Code style
+
+- Test names in **English**, lower-kebab in filenames (`predictive-search.spec.ts`).
+- JSDoc-style comments in English above `test.describe`.
+- Locators via `getByRole` and `getByTestId`. **Avoid XPath and brittle
+  CSS selectors.**
+- Never use raw `setTimeout` / `page.waitForTimeout`. Rely on Playwright's
+  auto-wait and `expect()` assertions.
+
+### Test docstring template
+
+Every regression spec ships a header comment with this metadata so the
+ticket linkage stays in the source of truth:
+
+```ts
+/**
+ * Monday: <full ticket URL>
+ * Title: <human-readable title>
+ * Feature Area: <area under test>
+ * Validation Type: <e.g. UI Regression, Functional, Smoke>
+ * Site: oneshop
+ *
+ * Overview:
+ *   <narrative of what is being validated and why>
+ *
+ * Checks:
+ *   - <validation 1>
+ *   - <validation 2>
+ *
+ * Preconditions:
+ *   - <required setup>
+ */
 ```
 
 ---
 
-## Comandos comunes
+## Common commands
 
-| Comando | Qué hace |
+| Command | What it does |
 |---|---|
-| `pytest` | Corre todos los tests (headless) |
-| `pytest --headed` | Corre con navegador visible |
-| `pytest -m smoke` | Solo tests marcados como smoke |
-| `pytest tests/smoke/test_homepage_smoke.py` | Test específico |
-| `pytest --html=reports/last.html --self-contained-html` | Reporte HTML |
-| `playwright codegen oneshopqa.com.dev.nmg-platform.com` | Generador de código (graba acciones manuales) |
+| `npm test` | Run the full suite, headless |
+| `npm run test:smoke` | Smoke specs only |
+| `npm run test:regression` | Regression specs only |
+| `npm run test:headed` | All specs with visible browser |
+| `npm run test:ui` | Playwright UI runner (interactive) |
+| `npm run codegen:ts` | Codegen with Playwright Test output |
+| `npm run codegen` | Codegen with plain JavaScript output |
+| `npm run show-report` | Open the last HTML report |
 
 ---
 
-## Slash commands disponibles
+## Slash commands available
 
-Definidos en `.claude/commands/`:
+Defined in `.claude/commands/`:
 
-- `/qa-design` — Diseña casos de prueba a partir del texto de un ticket de Monday.
-- `/qa-report` — Genera reporte QA (positivo o negativo) listo para pegar como update en Monday.
-
-## Flujo del equipo
-
-Manual: el QA toma el ticket, diseña casos, graba selectores con
-`playwright codegen`, escribe el test, lo corre con `pytest`, y pega el
-reporte generado en Monday. **No hay auto-trigger desde Monday** — esa
-opción existe pero está archivada en `experimental/webhook/`.
+- `/qa-design` — Designs test cases from a Monday ticket description.
+- `/qa-report` — Produces a QA pass/fail update ready to paste in Monday.
 
 ---
 
-## Variables de entorno (`.env`)
+## Team workflow
+
+Manual: the QA picks up a ticket, designs cases with `/qa-design`,
+records selectors with `npm run codegen:ts`, writes the spec, runs it
+with `npx playwright test`, and pastes the summary back into Monday.
+**No auto-trigger from Monday** — that option was prototyped and lives
+archived in `experimental/webhook/`.
+
+---
+
+## Environment variables (`.env`)
 
 ```
-MONDAY_API_TOKEN=...
-MONDAY_BOARD_ID=...
 BASE_URL=https://oneshopqa.com.dev.nmg-platform.com/
-TEST_USER_EMAIL=...
-TEST_USER_PASSWORD=...
+TEST_USER_EMAIL=
+TEST_USER_PASSWORD=
+MONDAY_API_TOKEN=   # optional, not required for the standard flow
 ```
 
-`.env` está gitignored. Para nuevos colaboradores, copiar `.env.example` y rellenar.
+`.env` is gitignored. New contributors copy `.env.example` and fill in.
 
 ---
 
-## Reglas para Claude Code en este proyecto
+## Rules for Claude Code in this project
 
-1. **Nunca commitear** `.env` o credenciales.
-2. **Antes de escribir un test nuevo**, revisar si ya hay un Page Object reutilizable en `pages/`.
-3. **Antes de inventar un locator**, sugerirle al usuario que añada `data-testid` al frontend si el elemento no es accesible.
-4. **Todos los tests** deben ser ejecutables individualmente (sin depender de estado de tests previos).
-5. **Idioma:** responder en español a Manuel; comentarios en español, código en inglés.
+1. **Never commit** `.env` or credentials.
+2. **Before writing a new spec**, check whether a reusable Page Object
+   already exists in `pages/`.
+3. **Before inventing a locator**, suggest the frontend team add a
+   `data-testid` if the element is not accessibility-reachable.
+4. **Every spec must be runnable in isolation** (no implicit state from
+   previous tests).
+5. **Language:** answer Manuel in Spanish when chatting; keep all code,
+   comments and docs in English.

@@ -1,34 +1,31 @@
-# === Python ===
-__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-.venv/
-venv/
-env/
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.ruff_cache/
+# === Node / TypeScript ===
+node_modules/
+dist/
+*.tsbuildinfo
+.npm/
+
+# === Playwright ===
+playwright-report/
+test-results/
+videos/
+traces/
 
 # === Secrets ===
 .env
 .env.local
 .env.*.local
 
-# === Playwright artifacts ===
-videos/
-traces/
-playwright-report/
-test-results/
-
-# === QA reports (committing examples only) ===
+# === Generated QA reports ===
 reports/
 !reports/.gitkeep
-!reports/example_*.md
 
-# === Local-only docs (no subir al remoto) ===
+# === Legacy Python prototype (kept locally as reference) ===
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# === Local-only docs (do not push) ===
 HOJA_DE_RUTA_AUTOMATIZACION_QA.md
 
 # === IDE & OS noise ===

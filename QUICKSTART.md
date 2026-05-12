@@ -1,168 +1,165 @@
 # QUICKSTART — Daily workflow
 
-Lo mínimo que necesitás para arrancar a trabajar cada día.
-Si necesitás instalar todo desde cero (máquina nueva, primera vez), mirá
-primero `SETUP.md`.
+What you need to start working every day. If you need to install from
+scratch (new machine, first time), read `SETUP.md` first.
 
-> El flujo actual del equipo es **manual**: vos corrés pytest cuando
-> querés. El integrador automático Monday ↔ pytest (webhook) está
-> archivado en `experimental/webhook/` por si en el futuro se decide
-> reactivar.
+> The team flow is **manual**: you run `npm test` (or `npx playwright
+> test`) when you want. The original Monday auto-trigger lives archived
+> in `experimental/webhook/` in case it ever gets revisited.
 
 ---
 
-## 1. Pre-flight (30 segundos)
+## 1. Pre-flight (10 seconds)
 
 ```bash
 cd "/Users/user/Documents/Claude/Projects/QA Automation Flow"
-source .venv/bin/activate
 ```
 
-Vas a ver `(.venv)` al inicio del prompt. Sanity check del staging:
+Sanity-check the staging:
 
 ```bash
 curl -I https://oneshopqa.com.dev.nmg-platform.com
 ```
 
-Debe responder `HTTP/2 200`. Si responde `403` o no responde, hablalo
-con el admin del ambiente antes de seguir.
+Must answer `HTTP/2 200`. If not, contact the DEV admin before going on.
 
 ---
 
-## 2. Trabajar en un ticket nuevo
+## 2. Working on a new ticket
 
-1. **Leé el ticket** en Monday y copiá descripción + DOD.
-2. **Diseñá los casos** abriendo Claude Code (`claude` en terminal) y
-   pegando:
-   ```
+1. **Read the ticket** in Monday and copy description + DOD.
+2. **Design the cases.** Start Claude Code (`claude`) in the project
+   root, then:
+
+   ```text
    /qa-design
 
-   <descripción y DOD del ticket>
+   <ticket description + DOD>
    ```
-3. **Grabá los selectores** con codegen:
-   ```bash
-   playwright codegen --ignore-https-errors https://oneshopqa.com.dev.nmg-platform.com/
-   ```
-   Hacé las acciones manuales en el browser que se abre. El panel
-   "Inspector" del costado te va escribiendo el código Python.
-4. **Pedile a Claude Code** que arme el test:
-   ```
-   Crea un test en tests/regression/test_<feature>.py para el ticket
-   <URL-MONDAY>. Selectores grabados con codegen:
 
-   <pegá el código del Inspector>
+3. **Record selectors with codegen** (Playwright Test JS output —
+   matches the official repo):
 
-   Seguí el patrón de tests/regression/test_predictive_search.py.
-   ```
-5. **Corré el test** local:
    ```bash
-   pytest tests/regression/test_<feature>.py --headed
+   npm run codegen:ts -- https://oneshopqa.com.dev.nmg-platform.com/
    ```
-6. **Pegá el reporte en Monday.** El archivo está en
-   `reports/qa_PASS_<timestamp>.md` o `qa_FAIL_<timestamp>.md`. Copialo
-   y pegalo como update del ticket. Mové el status a `QA Passed` /
-   `QA Failed`.
+
+   Drive the UI manually. The Inspector keeps writing TypeScript code
+   you can copy as-is.
+
+4. **Ask Claude Code to lay down the spec:**
+
+   ```text
+   Create a new spec in tests/regression/<feature>.spec.ts for the ticket
+   <Monday-URL>. Selectors recorded with codegen:
+
+   <paste the code from the Inspector>
+
+   Follow the pattern of tests/regression/predictive-search.spec.ts.
+   ```
+
+5. **Run it:**
+
+   ```bash
+   npx playwright test tests/regression/<feature>.spec.ts --headed
+   npm run show-report
+   ```
+
+6. **Promote to the official repo.** Once green, copy the new
+   `<feature>.spec.ts` and any new Page Object into the official
+   automation repository. Then paste the run summary as an update on
+   the Monday ticket and move the status manually.
 
 ---
 
-## 3. Re-correr la suite (cualquier momento)
+## 3. Re-running the suite (any time)
 
 ```bash
-pytest                              # toda la suite
-pytest -m smoke                     # solo smoke
-pytest tests/regression/            # solo regresión
-pytest -k predictive --headed       # filtro por nombre, navegador visible
+npm test                                  # full suite
+npm run test:smoke                        # smoke only
+npm run test:regression                   # regression only
+npx playwright test --headed              # visible browser
+npx playwright test --ui                  # Playwright UI runner
+npx playwright test -g "AMANA"            # filter by test title
 ```
 
 ---
 
-## 4. Verificaciones rápidas si algo no anda
+## 4. Quick troubleshooting
 
-| Síntoma | Verificación | Fix |
+| Symptom | Check | Fix |
 |---|---|---|
-| Pytest dice `403 Forbidden` o `TargetClosedError` | `curl -I <BASE_URL>` | Tu IP no está autorizada por el staging. Hablalo con el admin del ambiente. |
-| Videos no se reproducen en Monday | `which ffmpeg` | `brew install ffmpeg` para que los .webm se conviertan a .mp4. |
-| Reporte se ve sin formato | que `markdown` esté instalado | `pip install markdown` |
-| `command not found: pytest / playwright` | venv no activo | `source .venv/bin/activate` (debes ver `(.venv)` en prompt) |
-| Video con nombre random tipo `page@abc.webm` | sesión interrumpida antes de `pytest_sessionfinish` | El renombrado descriptivo solo ocurre al final de un run completo. Re-corré el test entero. |
+| `403 Forbidden` from the staging | `curl -I <BASE_URL>` | Your IP is not authorized. Talk to the DEV admin. |
+| `Error: browserType.launch` | `npx playwright install --dry-run` | `npm run install:browsers`. |
+| Codegen opens but stays blank | DEV env unreachable | Same as `403` above. |
+| Spec fails on a locator | DOM probably changed | Re-record with codegen, update the Page Object. |
+| Random video filenames | Playwright nests evidence by test | Look under `test-results/<test-name>/` — Playwright Test names the folder after the test. |
 
 ---
 
-## 5. Datos técnicos para la demo / preguntas del lead
+## 5. Tech notes for the demo / questions from the lead
 
-### ¿Qué hace el proyecto?
+### What does the project do?
 
-Toma el flujo manual de QA en `oneshop` (revisión de tickets, ejecución
-de pruebas, reporte, cambio de estado) y lo encadena al cambio de estado
-en Monday. El QA mantiene el control humano: tomar el ticket (avatar en
-QA/Rel) y moverlo a `QA In Progress` son acciones manuales. A partir de
-ahí, el resto corre solo: ejecución de pruebas en navegador real, captura
-de evidencia (video + trace), generación del reporte y posteo como update
-en el ticket con cambio de estado a `QA Passed` o `QA Failed`.
+It takes the manual QA flow on oneshop and turns it into reusable
+Playwright Test specs. The QA stays in control of which tickets get
+executed; AI copilots (Claude Code, Cursor) accelerate the writing of
+the specs themselves. Specs land here, get validated, then are copied
+into the official automation repository.
 
 ### Stack
 
-| Capa | Herramienta | Por qué |
+| Layer | Tool | Why |
 |---|---|---|
-| Lenguaje | Python 3.12 | Sintaxis cercana a inglés; estándar en QA |
-| Test framework | pytest + pytest-playwright | Estándar de la industria |
-| Browser automation | Playwright (Chromium) | Auto-wait, video, trace, locators por accesibilidad |
-| Reportes | Markdown → HTML | Markdown para lectura local, HTML para Monday |
-| Integración Monday | GraphQL API v2 + webhooks | API oficial; webhook para trigger |
-| Server local | Flask | Liviano, una sola dependencia |
-| Tunnel | cloudflared | Gratuito, sin cuenta; URL pública para Monday |
-| Editor / IA | Cursor + Claude Code (CLI) | Generación, edición e iteración de tests |
+| Language | TypeScript | Same language and conventions as the official automation repo |
+| Test runner | Playwright Test | First-class auto-wait, video, trace, codegen, fixtures |
+| Browser | Chromium (Playwright build) | Deterministic; no system browser version drift |
+| AI copilots | Claude Code (CLI) + Cursor | Spec scaffolding, refactors, slash commands |
 
-### Decisiones de diseño que vale defender
+### Design decisions worth defending
 
-1. **Gate manual mantenido.** El QA decide qué tickets se ejecutan (con
-   QA/Rel + status). Esto evita ejecuciones no deseadas y mantiene
-   trazabilidad humana.
-2. **Locators por rol de accesibilidad** (`get_by_role`, `get_by_test_id`).
-   Más robustos a cambios visuales y a refactors de HTML que los XPath.
-3. **Page Object Model**. Cada componente UI (modal de búsqueda, home,
-   etc.) vive en `pages/`. Si un selector cambia, se arregla en un solo
-   archivo y todos los tests siguen funcionando.
-4. **Video + trace siempre**. Cualquier fallo es reproducible con la
-   evidencia capturada. Modo `retain-on-failure` disponible para CI.
-5. **Acoplamiento mínimo con Monday**. La metadata del ticket vive en el
-   docstring del test (`Monday: <URL>`). No hay base de datos ni mapeos
-   externos para mantener.
-6. **Webhook + tunnel local**, no servidor en la nube. Costo cero,
-   privacidad alta, deployable en cualquier laptop. Limitación: la URL
-   cambia con cada reinicio del tunnel.
+1. **Manual gate by design.** Tests run when the QA says they run. Keeps
+   human review in the loop.
+2. **Accessibility-first locators** (`getByRole`, `getByTestId`). Survive
+   HTML refactors that CSS / XPath would not.
+3. **Page Object Model.** UI changes are absorbed in one file.
+4. **Video + trace per run.** Evidence is reproducible without extra
+   tooling.
+5. **Ticket ↔ spec linked by JSDoc metadata.** No external mapping to
+   keep in sync.
+6. **AI copilots for authoring, never for execution.** They write the
+   specs; Playwright Test runs them deterministically.
 
-### Cobertura actual
+### Coverage today
 
-- `tests/smoke/test_homepage_smoke.py` — humo del home.
-- `tests/regression/test_predictive_search.py` — featured brands as pills
-  en el modal de búsqueda (ticket NGSCH Follow-Up).
+- `tests/smoke/homepage.spec.ts` — home smoke (loads + no console errors).
+- `tests/regression/predictive-search.spec.ts` — AMANA as pill in the
+  Brands section of the predictive search panel (Monday: NGSCH Follow-Up).
+- `tests/regression/predictive-search-trademark.spec.ts` — Trademark
+  symbols rendering correctly in Featured Products.
 
-Para agregar nuevos tests basta con copiar el patrón del docstring y
-declarar el `Monday: <URL>` correspondiente.
+Add new specs by copying the pattern from the predictive search file.
 
-### Métricas / tiempos típicos
+### Typical timings
 
-- Smoke (1–2 tests): ~10 segundos.
-- Regression test individual: ~5–15 segundos según el flujo.
-- Webhook → fin de pytest → posteo a Monday: ~30 segundos.
+- Smoke (2 tests): ~10 seconds.
+- A single regression spec: ~5–15 seconds depending on the flow.
+- New spec authoring per ticket: ~30 minutes (read → design → codegen →
+  write → run green).
 
-### Seguridad / secrets
+### Security / secrets
 
-- `.env` está en `.gitignore` — nunca se commitea.
-- Variables sensibles: `MONDAY_API_TOKEN`, `TEST_USER_PASSWORD`.
-- El webhook es un endpoint público mientras corre el tunnel. Opcional:
-  `MONDAY_WEBHOOK_SECRET` para validar firma (no activado por defecto).
-- El staging tiene cert mismatch; `ignore_https_errors` está activado
-  intencionalmente solo para Playwright y `requests` en el health-check.
+- `.env` is gitignored and never leaves the machine.
+- Sensitive vars: `TEST_USER_PASSWORD`, optional `MONDAY_API_TOKEN`.
+- The DEV environment uses a self-signed-ish cert (host mismatch);
+  `ignoreHTTPSErrors: true` in `playwright.config.ts` handles that on
+  purpose.
 
-### Limitaciones conocidas / próximos pasos
+### Known limits / next steps
 
-- **URL del tunnel cambia** con cada reinicio. Mover a Cloudflare named
-  tunnel (gratis, requiere dominio) elimina ese paso manual.
-- **No hay test data automatizada**. Los datos semilla (usuarios, marcas
-  featured) deben existir antes de correr los tests.
-- **Un solo navegador (Chromium)**. Multi-browser estaría a 1 flag de
-  pytest-playwright; pendiente decidir si vale.
-- **Fase 6 (API testing)** está documentada en la hoja de ruta pero no
-  implementada todavía.
+- **Single browser (Chromium)** for now. Multi-browser is one config
+  change away when needed.
+- **No CI yet.** Adding GitHub Actions to run smoke on every PR is the
+  natural next step once specs land in the official repo.
+- **API-level tests** are out of scope here; the official repo is the
+  right place to add them with `request` fixtures.
