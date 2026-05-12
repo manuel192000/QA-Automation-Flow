@@ -174,7 +174,9 @@ Si **no** existen, dentro del proyecto corre `claude` y pégale:
 
 ```
 crea .claude/commands/qa-design.md y .claude/commands/qa-report.md
-con el contenido descrito en HOJA_DE_RUTA_AUTOMATIZACION_QA.md Fase 1.
+con el contenido de Fase 1 del roadmap (si tenés copia local de
+`HOJA_DE_RUTA_AUTOMATIZACION_QA.md`) o siguiendo `CLAUDE.md` y los archivos en
+`.claude/commands/`.
 ```
 
 Después usalos así (dentro de Claude Code):
@@ -335,7 +337,6 @@ Checks:
 ```
 QA Automation Flow/
 ├── CLAUDE.md                          # Contexto que Claude Code lee automáticamente
-├── HOJA_DE_RUTA_AUTOMATIZACION_QA.md  # Roadmap de las 6 fases
 ├── SETUP.md                           # Este archivo
 ├── README.md                          # Guía corta
 ├── .claude/commands/                  # Slash commands personalizados
@@ -523,7 +524,7 @@ propio, o usar [ngrok](https://ngrok.com) con plan de pago.
 
 ## 15. Próximos hitos del proyecto
 
-Detallados en `HOJA_DE_RUTA_AUTOMATIZACION_QA.md`:
+Resumen (el roadmap por fases puede estar solo en copia local, fuera del repo):
 
 - **Fase 6:** API testing (pytest + `httpx` o `playwright.request`).
 - **Cobertura:** seguir agregando tests al directorio `tests/regression/` siguiendo

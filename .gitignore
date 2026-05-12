@@ -28,6 +28,9 @@ reports/
 !reports/.gitkeep
 !reports/example_*.md
 
+# === Local-only docs (no subir al remoto) ===
+HOJA_DE_RUTA_AUTOMATIZACION_QA.md
+
 # === IDE & OS noise ===
 .vscode/
 .idea/

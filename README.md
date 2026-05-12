@@ -23,7 +23,8 @@ evidence-rich regression scripts.
   the recorded video as MP4 per test, and a Playwright trace `.zip`.
   The report is ready to paste as a Monday update.
 - **Documentation:** every decision and trade-off is captured in
-  `SETUP.md`, `QUICKSTART.md`, and `HOJA_DE_RUTA_AUTOMATIZACION_QA.md`.
+  `SETUP.md` and `QUICKSTART.md`. (An optional local roadmap file
+  `HOJA_DE_RUTA_AUTOMATIZACION_QA.md` is gitignored and not on GitHub.)
 
 ---
 
@@ -73,7 +74,6 @@ QA Automation Flow/
 ├── README.md                      ← you are here
 ├── SETUP.md                       ← detailed environment setup
 ├── QUICKSTART.md                  ← daily workflow + demo notes
-├── HOJA_DE_RUTA_AUTOMATIZACION_QA.md  ← phases roadmap (strategic doc)
 ├── CLAUDE.md                      ← Claude Code project context
 │
 ├── .claude/commands/              ← Claude Code slash commands
@@ -189,7 +189,7 @@ The report is sized and styled to look clean inside Monday's update box
 
 ## Roadmap
 
-Detailed in [`HOJA_DE_RUTA_AUTOMATIZACION_QA.md`](HOJA_DE_RUTA_AUTOMATIZACION_QA.md):
+High-level direction (full phased plan may exist only as a local doc):
 
 - **Phase 6 (next):** API-level testing with `httpx` or
   `playwright.request`. Useful for backend smoke before UI runs.
